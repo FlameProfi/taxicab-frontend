@@ -1,0 +1,255 @@
+.taxi-call-card {
+  border: 1px solid #555;
+  border-radius: 12px;
+  padding: 20px;
+  background: #383838;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    border-color: #666;
+  }
+
+  &.status-pending {
+    border-left: 4px solid #ffc107;
+  }
+
+  &.status-accepted {
+    border-left: 4px solid #007bff;
+  }
+
+  &.status-completed {
+    border-left: 4px solid #28a745;
+  }
+
+  &.status-cancelled {
+    border-left: 4px solid #dc3545;
+  }
+
+  &.status-no-answer {
+    border-left: 4px solid #6c757d;
+  }
+
+  .call-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #555;
+
+    .client-info {
+      .client-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 4px;
+      }
+
+      .client-phone {
+        color: #aaa;
+        font-size: 14px;
+      }
+    }
+
+    .call-meta {
+      text-align: right;
+
+      .call-time {
+        color: #ccc;
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+
+      .call-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .status-icon {
+          font-size: 16px;
+        }
+
+        .status-text {
+          color: #e0e0e0;
+          font-size: 14px;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  .addresses {
+    margin-bottom: 16px;
+
+    .address-item {
+      display: flex;
+      margin-bottom: 8px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .address-label {
+        color: #aaa;
+        font-size: 14px;
+        min-width: 70px;
+        font-weight: 500;
+      }
+
+      .address-value {
+        color: #e0e0e0;
+        font-size: 14px;
+        word-break: break-word;
+        text-align: left;
+      }
+    }
+
+    .pickup .address-label {
+      color: #007bff;
+    }
+
+    .destination .address-label {
+      color: #28a745;
+    }
+  }
+
+  .driver-info {
+    background: rgba(0, 123, 255, 0.1);
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 16px;
+
+    .driver-name {
+      color: #007bff;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .car-info {
+      color: #aaa;
+      font-size: 13px;
+    }
+  }
+
+  .call-details {
+    margin-bottom: 16px;
+
+    .trip-info {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+
+      .price,
+      .duration,
+      .distance {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .price {
+        color: #28a745;
+      }
+
+      .duration {
+        color: #007bff;
+      }
+
+      .distance {
+        color: #ffc107;
+      }
+    }
+
+    .rating {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+
+      .rating-label {
+        color: #aaa;
+        font-size: 14px;
+      }
+
+      .rating-stars {
+        color: #ffc107;
+        font-size: 16px;
+        letter-spacing: 2px;
+      }
+
+      .rating-value {
+        color: #e0e0e0;
+        font-size: 14px;
+      }
+    }
+
+    .call-notes {
+      .notes-label {
+        color: #aaa;
+        font-size: 14px;
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .notes-value {
+        color: #e0e0e0;
+        font-size: 14px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 10px;
+        border-radius: 6px;
+        word-break: break-word;
+      }
+    }
+  }
+
+  .call-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    .call-action-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+
+      &.call-btn {
+        background: rgba(0, 123, 255, 0.2);
+        color: #007bff;
+        border: 1px solid #007bff;
+
+        &:hover {
+          background: rgba(0, 123, 255, 0.3);
+        }
+      }
+
+      &.accept-btn {
+        background: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+        border: 1px solid #28a745;
+
+        &:hover {
+          background: rgba(40, 167, 69, 0.3);
+        }
+      }
+
+      &.cancel-btn {
+        background: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+        border: 1px solid #dc3545;
+
+        &:hover {
+          background: rgba(220, 53, 69, 0.3);
+        }
+      }
+    }
+  }
+}
