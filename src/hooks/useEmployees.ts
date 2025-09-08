@@ -1,78 +1,111 @@
-import { useState, useEffect } from "react";
-import { type Employee } from "../types/Employee";
+import { useEffect, useState } from 'react'
+import { type Employee } from '../types/Employee'
+import { API_ENDPOINTS } from '../utils/apiConfig'
 
-const useEmployees = () => {
+interface UseEmployeesResult {
+  employees: Employee[];
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
+  createEmployee: (employee: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Employee | null>;
+  updateEmployee: (id: number, employee: Partial<Employee>) => Promise<Employee | null>;
+  deleteEmployee: (id: number) => Promise<boolean>;
+}
+
+const useEmployees = (): UseEmployeesResult => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock данные сотрудников
-  const mockEmployees: Employee[] = [
-    {
-      id: 1,
-      firstName: "Иван",
-      lastName: "Петров",
-      position: "Менеджер по продажам",
-      department: "Отдел продаж",
-      email: "ivan.petrov@company.com",
-      phone: "+7 (999) 123-45-67",
-      salary: 65000,
-      hireDate: "2022-03-15",
-    },
-    {
-      id: 2,
-      firstName: "Мария",
-      lastName: "Сидорова",
-      position: "Финансовый аналитик",
-      department: "Финансовый отдел",
-      email: "maria.sidorova@company.com",
-      phone: "+7 (999) 234-56-78",
-      salary: 75000,
-      hireDate: "2021-07-20",
-    },
-    {
-      id: 3,
-      firstName: "Алексей",
-      lastName: "Козлов",
-      position: "Технический специалист",
-      department: "Сервисный отдел",
-      email: "alexey.kozlov@company.com",
-      phone: "+7 (999) 345-67-89",
-      salary: 55000,
-      hireDate: "2023-01-10",
-    },
-    {
-      id: 4,
-      firstName: "Елена",
-      lastName: "Волкова",
-      position: "HR-менеджер",
-      department: "Отдел кадров",
-      email: "elena.volkova@company.com",
-      phone: "+7 (999) 456-78-90",
-      salary: 60000,
-      hireDate: "2022-11-05",
-    },
-  ];
-
-  useEffect(() => {
-    // Симуляция загрузки данных
-    const timer = setTimeout(() => {
-      setEmployees(mockEmployees);
+  const fetchEmployees = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(API_ENDPOINTS.employees);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json() as Employee[];
+      setEmployees(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Произошла ошибка при загрузке данных');
+    } finally {
       setLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const refetch = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setEmployees(mockEmployees);
-      setLoading(false);
-    }, 500);
+    }
   };
 
-  return { employees, loading, error, refetch };
+  const createEmployee = async (employeeData: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>): Promise<Employee | null> => {
+    try {
+      const response = await fetch(API_ENDPOINTS.employees, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(employeeData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const newEmployee = await response.json() as Employee;
+      setEmployees(prev => [newEmployee, ...prev]);
+      return newEmployee;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка при создании сотрудника');
+      return null;
+    }
+  };
+
+  const updateEmployee = async (id: number, employeeData: Partial<Employee>): Promise<Employee | null> => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.employees}/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+      },
+        body: JSON.stringify(employeeData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const updatedEmployee = await response.json() as Employee;
+      setEmployees(prev => prev.map(emp => emp.id === id ? updatedEmployee : emp));
+      return updatedEmployee;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка при обновлении сотрудника');
+      return null;
+    }
+  };
+
+  const deleteEmployee = async (id: number): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.employees}/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      setEmployees(prev => prev.filter(emp => emp.id !== id));
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка при удалении сотрудника');
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  return { employees, loading, error, refetch: fetchEmployees, createEmployee, updateEmployee, deleteEmployee };
 };
 
 export default useEmployees;

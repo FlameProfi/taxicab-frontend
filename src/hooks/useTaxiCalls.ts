@@ -1,120 +1,160 @@
-import { useState, useEffect } from "react";
-import { type TaxiCall } from "../types/TaxiCall";
+import { useEffect, useState } from 'react'
+import { type TaxiCall } from '../types/TaxiCall'
+import { API_ENDPOINTS } from '../utils/apiConfig'
 
-const useTaxiCalls = () => {
+interface UseTaxiCallsResult {
+  calls: TaxiCall[];
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
+  createCall: (call: Omit<TaxiCall, 'id' | 'callTime' | 'createdAt' | 'updatedAt'>) => Promise<TaxiCall | null>;
+  updateCall: (id: number, call: Partial<TaxiCall>) => Promise<TaxiCall | null>;
+  updateCallStatus: (id: number, status: string, price?: number) => Promise<TaxiCall | null>;
+  deleteCall: (id: number) => Promise<boolean>;
+}
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
+};
+
+const useTaxiCalls = (): UseTaxiCallsResult => {
   const [calls, setCalls] = useState<TaxiCall[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock данные вызовов такси
-  const mockCalls: TaxiCall[] = [
-    {
-      id: 1,
-      clientName: "Анна Иванова",
-      clientPhone: "+7 (999) 123-45-67",
-      callTime: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-      pickupAddress: "ул. Ленина, 25",
-      destinationAddress: "пр. Победы, 10",
-      status: "completed",
-      driverName: "Иван Петров",
-      carModel: "Toyota Camry",
-      carNumber: "А123БВ777",
-      price: 350,
-      duration: 25,
-      distance: 12.5,
-      rating: 5,
-      notes: "Клиент с ребенком, нужна детская автокресло",
-    },
-    {
-      id: 2,
-      clientName: "Михаил Сидоров",
-      clientPhone: "+7 (999) 234-56-78",
-      callTime: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-      pickupAddress: "ул. Гагарина, 15",
-      destinationAddress: "аэропорт Домодедово",
-      status: "accepted",
-      driverName: "Алексей Козлов",
-      carModel: "Honda Civic",
-      carNumber: "В456ГД123",
-      notes: "Срочно! Опаздывает на рейс",
-    },
-    {
-      id: 3,
-      clientName: "Екатерина Волкова",
-      clientPhone: "+7 (999) 345-67-89",
-      callTime: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
-      pickupAddress: 'ТЦ "Европа", пр. Мира, 50',
-      destinationAddress: "ул. Советская, 8",
-      status: "pending",
-      notes: "Ждет у выхода из магазина",
-    },
-    {
-      id: 4,
-      clientName: "Дмитрий Морозов",
-      clientPhone: "+7 (999) 456-78-90",
-      callTime: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-      pickupAddress: "ул. Пушкина, 30",
-      destinationAddress: 'гостиница "Россия"',
-      status: "cancelled",
-      notes: "Отменил вызов",
-    },
-    {
-      id: 5,
-      clientName: "Ольга Петрова",
-      clientPhone: "+7 (999) 567-89-01",
-      callTime: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-      pickupAddress: "Ж/д вокзал",
-      destinationAddress: "ул. Садовая, 12",
-      status: "completed",
-      driverName: "Сергей Новиков",
-      carModel: "Ford Focus",
-      carNumber: "Е789ЖЗ456",
-      price: 280,
-      duration: 18,
-      distance: 8.2,
-      rating: 4,
-      notes: "Оставил зонт в такси",
-    },
-    {
-      id: 6,
-      clientName: "Александр Кузнецов",
-      clientPhone: "+7 (999) 678-90-12",
-      callTime: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-      pickupAddress: "ул. Новая, 45",
-      destinationAddress: 'ТРЦ "Глобус"',
-      status: "no_answer",
-      notes: "Не отвечает на звонки",
-    },
-  ];
-
-  useEffect(() => {
-    // Симуляция загрузки данных
-    const timer = setTimeout(() => {
-      // Сортируем по времени (новые первыми)
-      const sortedCalls = [...mockCalls].sort(
-        (a, b) =>
-          new Date(b.callTime).getTime() - new Date(a.callTime).getTime()
+  const fetchCalls = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(API_ENDPOINTS.taxiCalls, {
+        headers: getAuthHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json() as TaxiCall[];
+      const sortedCalls = [...data].sort((a, b) => 
+        new Date(b.callTime).getTime() - new Date(a.callTime).getTime()
       );
       setCalls(sortedCalls);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Произошла ошибка при загрузке данных');
+    } finally {
       setLoading(false);
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const refetch = () => {
-    setLoading(true);
-    setTimeout(() => {
-      const sortedCalls = [...mockCalls].sort(
-        (a, b) =>
-          new Date(b.callTime).getTime() - new Date(a.callTime).getTime()
-      );
-      setCalls(sortedCalls);
-      setLoading(false);
-    }, 500);
+    }
   };
 
-  return { calls, loading, error, refetch };
+  const createCall = async (callData: Omit<TaxiCall, 'id' | 'callTime' | 'createdAt' | 'updatedAt'>): Promise<TaxiCall | null> => {
+    try {
+      const response = await fetch(API_ENDPOINTS.taxiCalls, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(callData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const newCall = await response.json() as TaxiCall;
+      setCalls(prev => [newCall, ...prev]);
+      return newCall;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка при создании вызова');
+      return null;
+    }
+  };
+
+  const updateCall = async (id: number, callData: Partial<TaxiCall>): Promise<TaxiCall | null> => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.taxiCalls}/${id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(callData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const updatedCall = await response.json() as TaxiCall;
+      setCalls(prev => prev.map(call => call.id === id ? updatedCall : call));
+      return updatedCall;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка при обновлении вызова');
+      return null;
+    }
+  };
+
+const updateCallStatus = async (id: number, status: string, price?: number): Promise<TaxiCall | null> => {
+  try {
+    const currentCall = calls.find(call => call.id === id);
+    if (!currentCall) {
+      throw new Error('Вызов не найден');
+    }
+
+    const updateData = {
+      ...currentCall,
+      status: status,
+      ...(price !== undefined && { price: price })
+    };
+
+    const response = await fetch(`${API_ENDPOINTS.taxiCalls}/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(updateData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const updatedCall = await response.json() as TaxiCall;
+    setCalls(prev => prev.map(call => call.id === id ? updatedCall : call));
+    return updatedCall;
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'Ошибка при обновлении статуса вызова');
+    return null;
+  }
+};
+
+  const deleteCall = async (id: number): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.taxiCalls}/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      setCalls(prev => prev.filter(call => call.id !== id));
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка при удалении вызова');
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    fetchCalls();
+  }, []);
+
+  return { calls, loading, error, refetch: fetchCalls, createCall, updateCall, updateCallStatus, deleteCall };
 };
 
 export default useTaxiCalls;

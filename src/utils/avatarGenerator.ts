@@ -1,4 +1,3 @@
-// utils/avatarGenerator.ts
 export const stringToColor = (str: string): string => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -17,7 +16,6 @@ export const generateAvatarSVG = (
   const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   const color = stringToColor(`${firstName}${lastName}`);
 
-  // Максимально простая и надежная версия
   const svg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
     <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="${color}"/>

@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import "./style.less";
-import { NavLink } from "react-router-dom";
-import JoinTaxiModal from "../JoinTaxiModal";
+import { useState } from "react"
+import { NavLink } from "react-router-dom"
+import JoinTaxiModal from "../JoinTaxiModal"
+import "./style.less"
 function Header() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -13,6 +13,7 @@ function Header() {
     setIsModalOpen(false);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = (data: any) => {
     console.log("Форма отправлена:", data);
     alert(
@@ -52,6 +53,18 @@ function Header() {
             className={({ isActive }) => (isActive ? "active" : "")}
           >
             О нас
+          </NavLink>
+          <NavLink 
+            to="/profile" 
+            className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+          >
+            Профиль
+          </NavLink>
+          <NavLink 
+            to="/dashboard" 
+            className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+          >
+            Статистика
           </NavLink>
         </nav>
         <button className="join-button" onClick={openModal}>

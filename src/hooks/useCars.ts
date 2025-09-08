@@ -1,92 +1,111 @@
-import { useState, useEffect } from "react";
-import { type Car } from "../types/Car";
+import { useEffect, useState } from 'react'
+import { type Car } from '../types/Car'
+import { API_ENDPOINTS } from '../utils/apiConfig'
 
-// Конфигурация
-const USE_MOCK = true; // Переключайте на false когда API будет готов
-const API_URL = "https://your-api.com/cars";
+interface UseCarsResult {
+  cars: Car[];
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
+  createCar: (car: Omit<Car, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Car | null>;
+  updateCar: (id: number, car: Partial<Car>) => Promise<Car | null>;
+  deleteCar: (id: number) => Promise<boolean>;
+}
 
-const useCars = () => {
+const useCars = (): UseCarsResult => {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const mockCars: Car[] = [
-    {
-      id: 1,
-      make: "Toyota",
-      model: "Camry",
-      year: 2022,
-      price: 25000,
-      color: "White",
-      imageUrl: "https://a.d-cd.net/373f248s-960.jpg",
-    },
-    {
-      id: 2,
-      make: "Honda",
-      model: "Civic",
-      year: 2021,
-      price: 22000,
-      color: "Blue",
-      imageUrl:
-        "https://i.pinimg.com/736x/37/83/de/3783de5ecaa7a6195f4c5e6fadc865df.jpg",
-    },
-    {
-      id: 3,
-      make: "Ford",
-      model: "Mustang",
-      year: 2023,
-      price: 35000,
-      color: "Red",
-      imageUrl:
-        "https://avatars.mds.yandex.net/i?id=1f72d2e3514d2f143e62e4f27c7858a2_l-5250144-images-thumbs&n=13",
-    },
-  ];
-
-  const fetchRealCars = async () => {
+  const fetchCars = async () => {
     try {
-      setLoading(true); // Устанавливаем loading при начале запроса
+      setLoading(true);
       setError(null);
-
-      const response = await fetch(API_URL);
+      
+      const response = await fetch(API_ENDPOINTS.cars);
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+      
       const data: Car[] = await response.json();
       setCars(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка загрузки данных");
+      setError(err instanceof Error ? err.message : 'Произошла ошибка при загрузке данных');
     } finally {
-      setLoading(false); // Всегда устанавливаем loading в false
+      setLoading(false);
     }
   };
 
-  const fetchMockCars = () => {
-    setLoading(true); // Устанавливаем loading при начале mock загрузки
-    setError(null);
+  const createCar = async (carData: Omit<Car, 'id' | 'createdAt' | 'updatedAt'>): Promise<Car | null> => {
+    try {
+      const response = await fetch(API_ENDPOINTS.cars, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(carData),
+      });
 
-    setTimeout(() => {
-      setCars(mockCars);
-      setLoading(false); // Обязательно устанавливаем loading в false
-    }, 1000);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const newCar: Car = await response.json();
+      setCars(prev => [newCar, ...prev]);
+      return newCar;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка при создании автомобиля');
+      return null;
+    }
+  };
+
+  const updateCar = async (id: number, carData: Partial<Car>): Promise<Car | null> => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.cars}/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(carData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const updatedCar: Car = await response.json();
+      setCars(prev => prev.map(car => car.id === id ? updatedCar : car));
+      return updatedCar;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка при обновлении автомобиля');
+      return null;
+    }
+  };
+
+  const deleteCar = async (id: number): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.cars}/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      setCars(prev => prev.filter(car => car.id !== id));
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка при удалении автомобиля');
+      return false;
+    }
   };
 
   useEffect(() => {
-    if (USE_MOCK) {
-      fetchMockCars();
-    } else {
-      fetchRealCars();
-    }
-  }, [USE_MOCK]); // Добавляем зависимость от USE_MOCK
+    fetchCars();
+  }, []);
 
-  const refetch = () => {
-    if (USE_MOCK) {
-      fetchMockCars();
-    } else {
-      fetchRealCars();
-    }
-  };
-
-  return { cars, loading, error, refetch };
+  return { cars, loading, error, refetch: fetchCars, createCar, updateCar, deleteCar };
 };
 
 export default useCars;
